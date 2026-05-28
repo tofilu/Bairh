@@ -20,6 +20,7 @@ body {
     display: flex;
     width: 100%;
     justify-content: space-between;
+
 }
 
 .left-container,
@@ -47,10 +48,12 @@ textarea {
     box-sizing: border-box;
     resize: none;
     overflow-y: auto;
+
 }
 
 textarea:focus {
     outline: none;
+    font-family: "Fira Code", Consolas, monospace;
 }
 
 input[type="submit"] {
@@ -73,6 +76,7 @@ input[type="submit"]:hover {
     font-size: 16px;
     color: #333;
     white-space: pre-wrap;
+
 }
 
 .bottom-container {
