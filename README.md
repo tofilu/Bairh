@@ -6,7 +6,7 @@
 
 ```bash
 # 1. Abhängigkeiten installieren
-cd emoji_app
+cd Bairh
 python3 -m venv .venv           # Linux/macOS
 # python -m venv .venv          # Windows
 source .venv/bin/activate       # Linux/macOS
@@ -16,7 +16,10 @@ pip install -r backend/requirements.txt
 # 2. (Optional) LLM-Modell für bessere Ergebnisse
 ollama pull qwen2.5:0.5b
 
-# 3. Starten
+# 3. (Optional) Ollama-Server starten (falls nicht als Dienst aktiv)
+ollama serve
+
+# 4. Starten
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -136,7 +139,7 @@ Die **Emoji Recommender**-Anwendung ist eine vollständig lokal lauffähige Web-
 ## 📁 Projektstruktur
 
 ```
-emoji_app/                        # ← Wurzelverzeichnis des Projekts
+Bairh/                            # ← Wurzelverzeichnis des Projekts
 │
 ├── backend/                      # Backend (Python/FastAPI)
 │   ├── main.py                   #   Hauptanwendung mit allen Endpunkten
@@ -178,7 +181,7 @@ Das Frontend (`frontend/index.html`) kombiniert das klassische zweispaltige Layo
 - Farbschema: Indigo (`#4f46e5`) für Button und Fokus-Rahmen
 - Eingabe: **Textarea** (mehrzeilig) statt einfachem Input-Feld
 
-**Funktionalität (aus `emoji_app`):**
+**Funktionalität:**
 - API-Aufruf an `/recommend` per `fetch()`
 - Anzeige des empfohlenen Emojis (groß, 5rem)
 - Top-3 Kandidaten mit Prozent-Scores
@@ -220,7 +223,7 @@ Lege ein virtuelles Environment an und installiere die benötigten Pakete:
 
 ```bash
 # Ins Projektverzeichnis wechseln
-cd emoji_app
+cd Bairh
 
 # Virtuelles Environment erstellen (isoliert die Abhängigkeiten)
 python3 -m venv .venv           # Linux/macOS
@@ -278,16 +281,21 @@ Die Anwendung bereinigt die Beschreibungen automatisch (entfernt den Unicode-Ver
 Wenn du die LLM-Verfeinerungsfunktion nutzen möchtest:
 
 ```bash
-# 1. Ollama installieren (falls noch nicht geschehen):
-#    https://ollama.com – Download für Linux/macOS/Windows
+# Ollama installieren (falls noch nicht geschehen):
+#   https://ollama.com – Download für Linux/macOS/Windows
 
-# 2. Das Modell pullen (einmalig, ca. 500 MB Download):
+# Das Modell pullen (einmalig, ca. 500 MB Download):
 ollama pull qwen2.5:0.5b
 
-# 3. Prüfen, ob das Modell verfügbar ist:
+# Prüfen, ob das Modell verfügbar ist:
 ollama list
 # → qwen2.5:0.5b sollte in der Liste erscheinen
+
+# Ollama-Server starten (falls nicht bereits als Dienst aktiv):
+ollama serve
 ```
+
+**Wichtig:** Der `ollama serve`-Befehl muss in einem **separaten Terminal** laufen, während die App gestartet ist. Alternativ kann Ollama als Hintergrunddienst installiert werden.
 
 **Ohne Ollama:** Die Anwendung funktioniert auch komplett ohne LLM – sie loggt dann eine Warnung und verwendet die reinen Embedding-Ergebnisse.
 
@@ -311,7 +319,7 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 **Erwartete Konsolenausgabe:**
 ```
-INFO:     Will watch for changes in these directories: ['.../emoji_app']
+INFO:     Will watch for changes in these directories: ['.../Bairh']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     Lade CSV: .../backend/emoji_dataset.csv
 INFO:     CSV geladen: 3944 Zeilen
