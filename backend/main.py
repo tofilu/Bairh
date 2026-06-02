@@ -7,14 +7,39 @@ import chromadb
 import pandas as pd
 from pydantic import BaseModel
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi import Form
+from fastapi.responses import HTMLResponse
 
+
+app = FastAPI()
+
+# absolute Pfade
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "emoji_dataset.csv")
 CHROMA_DB_PATH = os.path.join(BASE_DIR, "emoji_db")
+frontend_path = os.path.join(BASE_DIR, "..", "frontend")
+frontend_path = os.path.abspath(frontend_path)
+
 
 embedding_function = SentenceTransformerEmbeddingFunction(
     model_name="paraphrase-multilingual-MiniLM-L12-v2"
 )
+
+# frontend Ordner mounten
+app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
+@app.get("/")
+def home():
+    return FileResponse(os.path.join(frontend_path, "index.html"))
+
+@app.post("/generate")
+def generate(input: str = Form(...)):
+    collection = init_db()
+    result = recommend(collection, input)
+    return result
 
 
 class ListEntry(BaseModel):
@@ -52,13 +77,6 @@ def init_db():
         )
     return collection
 
-
-def read_input():
-    print("please give an input")
-    user_input = input()
-    return user_input
-
-
 def recommend(collection, text):
     results = collection.query(
         query_texts=[text],
@@ -83,6 +101,3 @@ def recommend(collection, text):
 
 def _clean_descriptions(input: str) -> str:
     return re.sub(r"^E[\d.]+\s*", "", input).strip()
-
-
-print(recommend(init_db(), read_input()))

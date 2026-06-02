@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/" />
     <title>Emoji-Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
 
@@ -14,23 +15,51 @@
     <div class="page-wrapper">
         <div class="main-container">
             <div class="left-container">
-                <form action="/generate" method="post">
-                    <textarea name="input" placeholder="Gib deinen Satz ein ..."></textarea>
+
+                <form id="emoji-form">
+                    <textarea id="input" name="input" placeholder="Text eingeben"></textarea>
                     <input type="submit" value="OK">
                 </form>
+
             </div>
             <div class="right-container">
-                <output>
-                    Hier ist dein Satz mit passendem Emoji ...
+                <output id="result">
                 </output>
             </div>
         </div>
         <div class="bottom-container">
             <h4>Hinweis:</h4>
-            <p>Gib deinen Satz ein und lass dir den Text mit passenden Emojis vom Emoji-Generator ausgeben.</p>
-            <p>An dieser Stelle gibt es vielleicht noch ein paar adaptive Features ...</p>
+            <p>Gib deinen Satz ein und lass dir den Text mit passenden Emojis vom Emoji-Generator ausgeben.<br><br>
+                Wähle einen Emoji aus, der dir nicht gefällt, und suche dir einen passenderen heraus.
+                Dadurch wird der Emoji-Generator verbessert und liefert dir in Zukunft bessere Ergebnisse.
+            </p>
         </div>
     </div>
+    <script>
+        document.getElementById("emoji-form").addEventListener("submit", async function (e) {
+            e.preventDefault(); // verhindert Seiten-Reload
+
+            const inputText = document.getElementById("input").value;
+
+            document.getElementById("result").innerText = "Text mit Emojis wird geladen ..."
+
+            const response = await fetch("/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    input: inputText
+                })
+            });
+
+            const data = await response.json();
+
+            document.getElementById("result").innerText =
+                inputText + " " + data.emoji;
+        });
+    </script>
+
 </body>
 
 </html>
