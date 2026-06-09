@@ -12,9 +12,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi import Form
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.collection = init_db()
+    yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 # absolute Pfade
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,10 +42,8 @@ def home():
     return FileResponse(os.path.join(frontend_path, "index.html"))
 
 @app.post("/generate")
-def generate(input: str = Form(...)):
-    collection = init_db()
-    result = recommend(collection, input)
-    return result
+def generate(request: Request, input: str = Form(...)):
+    return recommend(request.app.state.collection, input)
 
 
 class ListEntry(BaseModel):
