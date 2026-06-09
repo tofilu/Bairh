@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/" />
     <title>Emoji-Generator</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤬</text></svg>">
+    <link rel="stylesheet" href="/static/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
 
@@ -36,7 +37,8 @@
         </div>
     </div>
     <script>
-        document.getElementById("emoji-form").addEventListener("submit", async function (e) {
+
+        /* document.getElementById("emoji-form").addEventListener("submit", async function (e) {
             e.preventDefault(); // verhindert Seiten-Reload
 
             const inputText = document.getElementById("input").value;
@@ -57,7 +59,63 @@
 
             document.getElementById("result").innerText =
                 inputText + " " + data.emoji;
+        }); */
+
+        document.getElementById("emoji-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            
+            const inputText = document.getElementById("input").value;
+            const result = document.getElementById("result");
+            
+            result.textContent = "Text mit Emojis wird geladen ...";
+
+            const response = await fetch("/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    input: inputText
+                })
+            });
+            
+            const data = await response.json();
+
+        renderResult(inputText, data);
+    });
+
+    function renderResult(inputText, candidates) {
+        const result = document.getElementById("result");
+
+        result.textContent = "";              // alten Inhalt leeren
+        result.append(inputText + " ");       // der Satztext
+
+        // Wrapper dient als Anker für das Menü
+        const wrapper = document.createElement("span");
+        wrapper.className = "emoji-wrapper";
+
+        // Emoji als eigenes, klickbares Element
+        const emojiSpan = document.createElement("span");
+        emojiSpan.className = "generated-emoji";
+        emojiSpan.textContent = candidates[0].emoji;
+
+        // Menü mit den Alternativen 2, 3, 4
+        const menu = document.createElement("div");
+        menu.className = "emoji-menu";
+        candidates.slice(1).forEach(cantidate => {
+            const alt = document.createElement("span");
+            alt.className = "emoji-alt";
+            alt.textContent = cantidate.emoji;
+            
+            alt.addEventListener("click", () => {
+                emojiSpan.textContent = cantidate.emoji;   // Auswahl übernehmen
+                wrapper.classList.remove("open");
+            });
+            menu.append(alt);
         });
+        
+        result.append(wrapper);
+        wrapper.append(emojiSpan, menu);
+        
+    }
     </script>
 
 </body>

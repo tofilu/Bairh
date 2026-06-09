@@ -82,3 +82,51 @@ input[type="submit"]:hover {
 .bottom-container {
     width: 100%;
 }
+
+.emoji-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.generated-emoji {
+    cursor: pointer;
+    display: inline-block;
+}
+
+.emoji-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: -200%;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    z-index: 10;
+}
+
+.emoji-wrapper:hover .generated-emoji {
+    animation: shaking 0.15s infinite;
+    filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
+}
+
+.emoji-wrapper:hover .emoji-menu {
+    display: flex;
+}
+
+.emoji-alt {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.emoji-alt:hover {
+    background: #f0f0f0;
+}
+
+@keyframes shaking {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(0eg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}

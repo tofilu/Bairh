@@ -84,7 +84,7 @@ def init_db():
 def recommend(collection, text):
     results = collection.query(
         query_texts=[text],
-        n_results=3,
+        n_results=4,
     )
     candidates: list[ListEntry] = []
     for metadata, description, cosine_distance in zip(
@@ -99,8 +99,8 @@ def recommend(collection, text):
             )
         )
     candidates.sort(key=lambda c: c.score, reverse=True)
-    top = candidates[0]
-    return top
+    #top = candidates[0]
+    return candidates
 
 
 def _clean_descriptions(input: str) -> str:
