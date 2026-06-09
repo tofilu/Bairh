@@ -108,6 +108,18 @@
             alt.addEventListener("click", () => {
                 emojiSpan.textContent = cantidate.emoji;   // Auswahl übernehmen
                 wrapper.classList.remove("open");
+
+                async function sendFeedback() {
+                    await fetch("/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams({
+                            emoji: cantidate.emoji,
+                            emoji_feedback: inputText
+                        })
+                    });
+                }
+                sendFeedback();
             });
             menu.append(alt);
         });
