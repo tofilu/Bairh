@@ -1,9 +1,18 @@
 # Bairh
+# Ziele:
+# 1. Fehler werfen wenn etwas nicht stimmt
+# 2. csv neu generieren wenn mehr dateien existieren bzw wenn die csv mehr inhalte enthält als in der aktuellen fassung
+# 3. mehrere csv's in eine chromadb zusammenfassen
 import os  # os for pathing
-import uuid
-
+import pathlib  # pathlib for pathing
+import uuid  # uuid for unique identifiers (i think)
 import chromadb
-import pandas as pd
+import pandas as pd  # for reading the csv
+import logging
+
+from chromadb.errors import (
+    InternalError,
+)  # to catch the specific error that gets thrown
 from pydantic import BaseModel
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +21,8 @@ from fastapi.responses import FileResponse
 # from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
@@ -94,17 +105,30 @@ class ListEntry(BaseModel):
 
 # embedding
 def init_db():
-    chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    logging.info("Initializing DB")
+    try:
+        logging.info("looking for PersistentClient of ChromaDB")
+        chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    except InternalError as e:
+        raise RuntimeError(
+            "ChromaDB unter " + CHROMA_DB_PATH + " nicht erreichbar: " + str(e)
+        )
+    logging.info("getting or creating a chromadb")
     collection = chroma_client.get_or_create_collection(
         name="emojis",
         embedding_function=embedding_function,  # type: ignore[arg-type]
     )
 
+    logging.info("checking for a csv")
+    if not pathlib.Path(CSV_PATH).exists():
+        raise FileNotFoundError("emoji_dataset.csv nicht gefunden unter " + CSV_PATH)
     # csv ist ein typ namens DATAFRAME, ist eigentlich immer noch eine tabelle
     csv = pd.read_csv(CSV_PATH)
 
+    logging.info("generating ids")
     # wir brauchen die anzahl der zeilen als id, in chromadb werden nur strings angenommen deshalb durchiterieren und alles dann zu strings machen
     ids = [str(index) for index in range(len(csv))]
+    logging.info("doing some feedback stuff")
     feedback = chroma_client.get_or_create_collection(
         name="feedback",
         embedding_function=embedding_function,  # type: ignore[arg-type]
@@ -114,6 +138,7 @@ def init_db():
 
     emojis = [{"emoji": emoji} for emoji in csv["emoji"].to_list()]
 
+    logging.info("filling the chromadb bit by bit with new info")
     batch_size = 100
     length = len(csv)
     for i in range(0, length, batch_size):
