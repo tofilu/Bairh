@@ -17,8 +17,6 @@ from pydantic import BaseModel
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
-# from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
 
@@ -103,39 +101,33 @@ class ListEntry(BaseModel):
     score: float
 
 
-# embedding
-def init_db():
-    logging.info("Initializing DB")
+# chroma
+def get_chroma_client():
+    logging.info("looking for PersistentClient of ChromaDB")
     try:
-        logging.info("looking for PersistentClient of ChromaDB")
-        chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+        return chromadb.PersistentClient(path=CHROMA_DB_PATH)
     except InternalError as e:
         raise RuntimeError(
             "ChromaDB unter " + CHROMA_DB_PATH + " nicht erreichbar: " + str(e)
         )
-    logging.info("getting or creating a chromadb")
-    collection = chroma_client.get_or_create_collection(
-        name="emojis",
-        embedding_function=embedding_function,  # type: ignore[arg-type]
-    )
 
+
+def load_csv(
+    path,
+):  # csv ist ein typ namens DATAFRAME, ist eigentlich immer noch eine tabelle
     logging.info("checking for a csv")
-    if not pathlib.Path(CSV_PATH).exists():
-        raise FileNotFoundError("emoji_dataset.csv nicht gefunden unter " + CSV_PATH)
-    # csv ist ein typ namens DATAFRAME, ist eigentlich immer noch eine tabelle
-    csv = pd.read_csv(CSV_PATH)
+    if not pathlib.Path(path).exists():
+        raise FileNotFoundError("emoji_dataset.csv nicht gefunden unter " + path)
+    csv = pd.read_csv(path)
+    return csv
 
-    logging.info("generating ids")
+
+def fill_collection(collection, csv):
     # wir brauchen die anzahl der zeilen als id, in chromadb werden nur strings angenommen deshalb durchiterieren und alles dann zu strings machen
+    logging.info("generating ids")
     ids = [str(index) for index in range(len(csv))]
-    logging.info("doing some feedback stuff")
-    feedback = chroma_client.get_or_create_collection(
-        name="feedback",
-        embedding_function=embedding_function,  # type: ignore[arg-type]
-    )
 
     descriptions = csv["description"].to_list()
-
     emojis = [{"emoji": emoji} for emoji in csv["emoji"].to_list()]
 
     logging.info("filling the chromadb bit by bit with new info")
@@ -148,6 +140,26 @@ def init_db():
             documents=descriptions[i:end],
             metadatas=emojis[i:end],  # type: ignore[arg-type]
         )
+
+
+def init_db():
+    logging.info("Initializing DB")
+    chroma_client = get_chroma_client()
+
+    collection = chroma_client.get_or_create_collection(
+        name="emojis",
+        embedding_function=embedding_function,  # type: ignore[arg-type]
+    )
+
+    logging.info("doing some feedback stuff")
+    feedback = chroma_client.get_or_create_collection(
+        name="feedback",
+        embedding_function=embedding_function,  # type: ignore[arg-type]
+    )
+
+    csv = load_csv(CSV_PATH)
+    fill_collection(collection, csv)
+
     return collection, feedback
 
 
