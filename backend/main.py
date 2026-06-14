@@ -9,6 +9,7 @@ import uuid  # uuid for unique identifiers (i think)
 import chromadb
 import pandas as pd  # for reading the csv
 import logging
+import ollama
 
 from chromadb.errors import (
     InternalError,
@@ -60,12 +61,20 @@ def generate(
     input: str = Form(...),
     weight: float = Form(DEFAULT_FEEDBACK_WEIGHT),
 ):
-    return recommend(
+    # Retrieval-Schritt: liefert passende Emojis zum Input
+    emoji_candidates = recommend(
         request.app.state.collection,
         request.app.state.feedback,
         input,
         weight,
     )
+
+    # Generation-Schritt: wählt einen der 4 Emojis aus
+    best_emoji = generate_with_llm(input, emoji_candidates)
+    emoji_candidates.sort(key=lambda c: c.emoji != best_emoji)
+
+    return emoji_candidates
+
 
 
 @app.post("/feedback")
@@ -162,7 +171,7 @@ def init_db():
 
     return collection, feedback
 
-
+# Retrieval-Schritt: liefert passende Emojis zum Input
 def recommend(collection, feedback, text, weight, n_results=4):
     scores: dict[str, float] = {}
     descriptions: dict[str, str] = {}
@@ -197,3 +206,27 @@ def recommend(collection, feedback, text, weight, n_results=4):
     ]
     candidates.sort(key=lambda c: c.score, reverse=True)
     return candidates[:n_results]
+
+# Generation-Schritt: wählt einen der 4 Emojis aus
+def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
+    emoji_context = ", ".join(f"{c.emoji}" for c in candidates)
+
+    prompt = (
+        f"Wähle genau 1 Emoji aus dieser Liste: {emoji_context}\n"
+        f"Das Emoji soll zu folgendem Satz passen: '{user_input}'\n"
+        f"Antworte nur mit dem ausgewählten Emoji."
+    )
+
+    response = ollama.chat(
+        model="llama3",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    # Emoji wird aus der Antwort "geschnitten"
+    response_emoji = response["message"]["content"].strip()
+
+    # Check, damit nicht halluziniert werden kann
+    valid_emojis = [c.emoji for c in candidates]
+    if response_emoji not in valid_emojis:
+        return candidates[0].emoji
+    
+    return response_emoji
