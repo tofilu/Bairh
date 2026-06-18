@@ -19,7 +19,8 @@
 
                 <form id="emoji-form">
                     <textarea id="input" name="input" placeholder="Text eingeben"></textarea>
-                    <input type="submit" value="OK">
+                    <div id="token-strip" class="token-strip"></div>
+                    <input type="submit" id="action-btn" value="Positionen wählen">
                 </form>
 
             </div>
@@ -30,85 +31,152 @@
         </div>
         <div class="bottom-container">
             <h4>Hinweis:</h4>
-            <p>Gib deinen Satz ein und lass dir den Text mit passenden Emojis vom Emoji-Generator ausgeben.<br><br>
-                Wähle einen Emoji aus, der dir nicht gefällt, und suche dir einen passenderen heraus.
-                Dadurch wird der Emoji-Generator verbessert und liefert dir in Zukunft bessere Ergebnisse.
+            <p>Gib deinen Satz ein und drücke "Positionen wählen". Dein Text wird dann anklickbar — setze
+                zwischen den Wörtern auf das "+" einen Emoji. Mit "OK" wird der Text rechts ausgegeben.<br><br>
+                Fahre über einen Emoji und wähle eine Alternative, die besser passt. Dadurch lernt der
+                Generator dazu und liefert dir in Zukunft bessere Ergebnisse.
             </p>
         </div>
     </div>
     <script>
 
-        document.getElementById("emoji-form").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            
-            const inputText = document.getElementById("input").value;
-            const result = document.getElementById("result");
-            
-            result.textContent = "Text mit Emojis wird geladen ...";
+        let mode = "positions";          // aktuelle Phase des Knopfs
+        let words = [];                  // die zerlegten Wörter
+        const active = new Set();        // Indizes der Wörter, NACH denen ein Emoji soll
 
+        const form = document.getElementById("emoji-form");
+        const actionBtn = document.getElementById("action-btn");
+        const input = document.getElementById("input");
+        const strip = document.getElementById("token-strip");
+        const result = document.getElementById("result");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            if (mode === "positions") {
+                tokenize();
+                if (words.length === 0) return;        // kein Text -> nichts tun
+                showStrip();                           // textarea -> anklickbare Wort-Leiste
+                mode = "ok";
+                actionBtn.value = "OK";
+            } else {
+                result.textContent = "Emojis werden geladen ...";
+                await generate();
+                showTextarea();                        // zurück zur textarea
+                mode = "positions";
+                actionBtn.value = "Positionen wählen";
+            }
+        });
+
+        // textarea ausblenden, Wort-Leiste an ihrer Stelle zeigen
+        function showStrip() {
+            input.style.display = "none";
+            strip.style.display = "block";
+        }
+
+        // Wort-Leiste ausblenden, textarea zurückholen
+        function showTextarea() {
+            strip.style.display = "none";
+            input.style.display = "";
+        }
+
+        // Phase 1: Text in klickbare Wörter + Lücken zerlegen
+        function tokenize() {
+            active.clear();
+            words = input.value.trim().split(/\s+/).filter(Boolean);
+
+            strip.innerHTML = "";
+            words.forEach((word, i) => {
+                const wordSpan = document.createElement("span");
+                wordSpan.textContent = word;
+                strip.append(wordSpan);
+
+                const gap = document.createElement("span");
+                gap.className = "gap";
+                gap.textContent = "+";
+                gap.addEventListener("click", () => {
+                    if (active.has(i)) { active.delete(i); gap.classList.remove("active"); }
+                    else               { active.add(i);    gap.classList.add("active"); }
+                });
+                strip.append(gap);
+            });
+        }
+
+        // ruft pro Abschnitt das Backend auf und gibt die ganze Kandidatenliste zurück
+        async function fetchCandidates(text) {
             const response = await fetch("/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
-                    input: inputText
-                })
+                body: new URLSearchParams({ input: text })
             });
-            
-            const data = await response.json();
+            return await response.json();
+        }
 
-        renderResult(inputText, data);
-    });
+        // schickt die Auswahl als Feedback ans Backend (Kontext = der Abschnitt)
+        async function sendFeedback(emoji, segment) {
+            await fetch("/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ emoji: emoji, emoji_feedback: segment })
+            });
+        }
 
-    function renderResult(inputText, candidates) {
-        const result = document.getElementById("result");
+        // baut einen Emoji mit Alternativen-Menü und Tausch-/Feedback-Logik
+        function buildEmoji(candidates, segment) {
+            const wrapper = document.createElement("span");
+            wrapper.className = "emoji-wrapper";
 
-        result.textContent = "";              // alten Inhalt leeren
-        result.append(inputText + " ");       // der Satztext
+            const emojiSpan = document.createElement("span");
+            emojiSpan.className = "generated-emoji";
+            emojiSpan.textContent = candidates[0].emoji;
 
-        // Wrapper dient als Anker für das Menü
-        const wrapper = document.createElement("span");
-        wrapper.className = "emoji-wrapper";
+            const menu = document.createElement("div");
+            menu.className = "emoji-menu";
 
-        // Emoji als eigenes, klickbares Element
-        const emojiSpan = document.createElement("span");
-        emojiSpan.className = "generated-emoji";
-        emojiSpan.textContent = candidates[0].emoji;
+            candidates.slice(1).forEach(candidate => {
+                const alt = document.createElement("span");
+                alt.className = "emoji-alt";
+                alt.textContent = candidate.emoji;
 
-        // Menü mit den Alternativen 2, 3, 4
-        const menu = document.createElement("div");
-        menu.className = "emoji-menu";
-        candidates.slice(1).forEach(cantidate => {
-            const alt = document.createElement("span");
-            alt.className = "emoji-alt";
-            alt.textContent = cantidate.emoji;
-            
-            // Wenn eine Alternative angeklickt wird, tauschen wir sie mit dem gezeigten Emoji
-            alt.addEventListener("click", () => {
-                const chosen = alt.textContent;
-                alt.textContent = emojiSpan.textContent;
-                emojiSpan.textContent = chosen;
-                wrapper.classList.remove("open");
+                alt.addEventListener("click", () => {
+                    const chosen = alt.textContent;
+                    alt.textContent = emojiSpan.textContent;
+                    emojiSpan.textContent = chosen;
+                    sendFeedback(chosen, segment);
+                });
 
-                // Wenn eine Alternative gewählt wurde, schicke wir das als Feedback an die FeedbackDB
-                async function sendFeedback() {
-                    await fetch("/feedback", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: new URLSearchParams({
-                            emoji: chosen,
-                            emoji_feedback: inputText
-                        })
-                    });
+                menu.append(alt);
+            });
+
+            wrapper.append(emojiSpan, menu);
+            return wrapper;
+        }
+
+        // Phase 2: Abschnitte bilden, Kandidaten holen, Ausgabe als DOM bauen
+        async function generate() {
+            const points = [...active].sort((a, b) => a - b);
+
+            const segmentAt = new Map();
+            const tasks = [];
+            let start = 0;
+            for (const k of points) {
+                const segment = words.slice(start, k + 1).join(" ");
+                segmentAt.set(k, segment);
+                tasks.push(fetchCandidates(segment).then(candidates => [k, candidates]));
+                start = k + 1;
+            }
+            const candidatesAt = new Map(await Promise.all(tasks));
+
+            result.textContent = "";
+            for (let i = 0; i < words.length; i++) {
+                result.append(words[i]);
+                if (candidatesAt.has(i)) {
+                    result.append(buildEmoji(candidatesAt.get(i), segmentAt.get(i)));
                 }
-                sendFeedback();
-            });
-            menu.append(alt);
-        });
+                if (i < words.length - 1) result.append(" ");
+            }
+        }
         
-        result.append(wrapper);
-        wrapper.append(emojiSpan, menu);
-        
-    }
     </script>
 
 </body>

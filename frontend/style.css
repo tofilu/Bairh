@@ -126,7 +126,37 @@ input[type="submit"]:hover {
 @keyframes shaking {
   0% { transform: rotate(0deg); }
   25% { transform: rotate(5deg); }
-  50% { transform: rotate(0eg); }
+  50% { transform: rotate(0deg); }
   75% { transform: rotate(-5deg); }
   100% { transform: rotate(0deg); }
+}
+
+.token-strip {
+    display: none;
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 2.2;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.gap {
+    display: inline-block;
+    min-width: 16px;
+    text-align: center;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.gap:hover {
+    color: #555;
+    background: #eee;
+}
+
+.gap.active {
+    color: #fff;
+    background: #4f46e5;
 }
