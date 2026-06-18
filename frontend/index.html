@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/" />
     <title>Emoji-Generator</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤬</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔣</text></svg>">
     <link rel="stylesheet" href="/static/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
@@ -37,29 +37,6 @@
         </div>
     </div>
     <script>
-
-        /* document.getElementById("emoji-form").addEventListener("submit", async function (e) {
-            e.preventDefault(); // verhindert Seiten-Reload
-
-            const inputText = document.getElementById("input").value;
-
-            document.getElementById("result").innerText = "Text mit Emojis wird geladen ..."
-
-            const response = await fetch("/generate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    input: inputText
-                })
-            });
-
-            const data = await response.json();
-
-            document.getElementById("result").innerText =
-                inputText + " " + data.emoji;
-        }); */
 
         document.getElementById("emoji-form").addEventListener("submit", async function (e) {
             e.preventDefault();
@@ -105,16 +82,20 @@
             alt.className = "emoji-alt";
             alt.textContent = cantidate.emoji;
             
+            // Wenn eine Alternative angeklickt wird, tauschen wir sie mit dem gezeigten Emoji
             alt.addEventListener("click", () => {
-                emojiSpan.textContent = cantidate.emoji;   // Auswahl übernehmen
+                const chosen = alt.textContent;
+                alt.textContent = emojiSpan.textContent;
+                emojiSpan.textContent = chosen;
                 wrapper.classList.remove("open");
 
+                // Wenn eine Alternative gewählt wurde, schicke wir das als Feedback an die FeedbackDB
                 async function sendFeedback() {
                     await fetch("/feedback", {
                         method: "POST",
                         headers: { "Content-Type": "application/x-www-form-urlencoded" },
                         body: new URLSearchParams({
-                            emoji: cantidate.emoji,
+                            emoji: chosen,
                             emoji_feedback: inputText
                         })
                     });

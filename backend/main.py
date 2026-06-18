@@ -5,7 +5,7 @@
 # 3. mehrere csv's in eine chromadb zusammenfassen
 import os  # os for pathing
 import pathlib  # pathlib for pathing
-import uuid  # uuid for unique identifiers (i think)
+import uuid  # uuid for unique identifiers
 import chromadb
 import pandas as pd  # for reading the csv
 import logging
@@ -38,7 +38,7 @@ CHROMA_DB_PATH = os.path.join(BASE_DIR, "emoji_db")
 FRONTEND_PATH = os.path.join(BASE_DIR, "..", "frontend")
 FRONTEND_PATH = os.path.abspath(FRONTEND_PATH)
 
-DEFAULT_FEEDBACK_WEIGHT = 1.0  # 1.0 = gleich stark wie Basis; zum Testen hochdrehen
+DEFAULT_FEEDBACK_WEIGHT = 0.7  # 1.0 = gleich stark wie Basis; zum Testen hochdrehen
 FEEDBACK_DISTANCE_THRESHOLD = 0.7  # Feedback, das weiter von der Anfrage entfernt ist als dieser Schwellenwert, wird ignoriert
 
 embedding_function = SentenceTransformerEmbeddingFunction(
@@ -84,16 +84,6 @@ def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = For
 def debug_feedback(request: Request):
     fb = request.app.state.feedback
     return {"count": fb.count(), "data": fb.get()}
-
-
-@app.get("/debug/collection")
-def debug_collection(request: Request):
-    base = request.app.state.collection
-    return {
-        "count": base.count(),
-        "data": base.get(limit=20),
-    }  # limit, weil die Basis riesig ist
-
 
 class ListEntry(BaseModel):
     emoji: str
