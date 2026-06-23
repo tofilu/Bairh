@@ -50,10 +50,17 @@
         const strip = document.getElementById("token-strip");
         const result = document.getElementById("result");
 
+        document.addEventListener("keydown", function (event) {
+            if(event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                actionBtn.click();
+            }
+        });
+
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
 
-            if (mode === "positions") {
+            if(mode === "positions") {
                 tokenize();
                 if (words.length === 0) return;        // kein Text -> nichts tun
                 showStrip();                           // textarea -> anklickbare Wort-Leiste
@@ -83,10 +90,17 @@
         // Phase 1: Text in klickbare Wörter + Lücken zerlegen
         function tokenize() {
             active.clear();
-            words = input.value.trim().split(/\s+/).filter(Boolean);
+            // in Wörter UND Zeilenumbrüche zerlegen; "\n" bleibt als eigenes Token erhalten
+            words = input.value.trim()
+                .split(/(\n)/)
+                .flatMap(part => part === "\n" ? ["\n"] : part.split(/\s+/).filter(Boolean));
 
             strip.innerHTML = "";
             words.forEach((word, i) => {
+                if (word === "\n") {
+                    strip.append(document.createElement("br"));   // Umbruch anzeigen
+                    return;                                        // kein "+" nach einem Umbruch
+                }
                 const wordSpan = document.createElement("span");
                 wordSpan.textContent = word;
                 strip.append(wordSpan);
@@ -96,7 +110,7 @@
                 gap.textContent = "+";
                 gap.addEventListener("click", () => {
                     if (active.has(i)) { active.delete(i); gap.classList.remove("active"); }
-                    else               { active.add(i);    gap.classList.add("active"); }
+                    else { active.add(i); gap.classList.add("active"); }
                 });
                 strip.append(gap);
             });
@@ -160,7 +174,8 @@
             const tasks = [];
             let start = 0;
             for (const k of points) {
-                const segment = words.slice(start, k + 1).join(" ");
+                // Umbrüche aus dem Kontext entfernen, sonst stünde "\n" im Suchtext fürs Backend
+                const segment = words.slice(start, k + 1).filter(w => w !== "\n").join(" ");
                 segmentAt.set(k, segment);
                 tasks.push(fetchCandidates(segment).then(candidates => [k, candidates]));
                 start = k + 1;
@@ -169,11 +184,17 @@
 
             result.textContent = "";
             for (let i = 0; i < words.length; i++) {
+                if (words[i] === "\n") {
+                    result.append(document.createElement("br"));   // Umbruch in der Ausgabe
+                    continue;
+                }
                 result.append(words[i]);
                 if (candidatesAt.has(i)) {
+                    result.append(" ");
                     result.append(buildEmoji(candidatesAt.get(i), segmentAt.get(i)));
                 }
-                if (i < words.length - 1) result.append(" ");
+                // Leerzeichen nur zwischen zwei Wörtern, nicht vor einem Umbruch
+                if (i < words.length - 1 && words[i + 1] !== "\n") result.append(" ");
             }
         }
         

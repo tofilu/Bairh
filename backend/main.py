@@ -1,8 +1,3 @@
-# Bairh
-# Ziele:
-# 1. Fehler werfen wenn etwas nicht stimmt
-# 2. csv neu generieren wenn mehr dateien existieren bzw wenn die csv mehr inhalte enthält als in der aktuellen fassung
-# 3. mehrere csv's in eine chromadb zusammenfassen
 import os  # os for pathing
 import pathlib  # pathlib for pathing
 import uuid  # uuid for unique identifiers
