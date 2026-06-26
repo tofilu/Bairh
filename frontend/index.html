@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/" />
     <title>Emoji-Generator</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔣</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔣</text></svg>">
     <link rel="stylesheet" href="/static/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
@@ -20,7 +21,10 @@
                 <form id="emoji-form">
                     <textarea id="input" name="input" placeholder="Text eingeben"></textarea>
                     <div id="token-strip" class="token-strip"></div>
-                    <input type="submit" id="action-btn" value="Positionen wählen">
+                    <div class="button-row">
+                        <input type="submit" id="action-btn" value="Positionen wählen">
+                        <input type="submit" id="ok-btn" value="OK">
+                    </div>
                 </form>
 
             </div>
@@ -46,33 +50,44 @@
 
         const form = document.getElementById("emoji-form");
         const actionBtn = document.getElementById("action-btn");
+        const okBtn = document.getElementById("ok-btn")
         const input = document.getElementById("input");
         const strip = document.getElementById("token-strip");
         const result = document.getElementById("result");
 
         document.addEventListener("keydown", function (event) {
-            if(event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 actionBtn.click();
             }
         });
 
-        form.addEventListener("submit", async function (e) {
+        // "Postitionen wählen" wird genutzt
+        actionBtn.addEventListener("click", async function (e) {
             e.preventDefault();
 
-            if(mode === "positions") {
+            if (mode === "positions") {
                 tokenize();
                 if (words.length === 0) return;        // kein Text -> nichts tun
                 showStrip();                           // textarea -> anklickbare Wort-Leiste
                 mode = "ok";
+                okBtn.style.display = "none";
                 actionBtn.value = "OK";
             } else {
                 result.textContent = "Emojis werden geladen ...";
                 await generate();
                 showTextarea();                        // zurück zur textarea
                 mode = "positions";
+                okBtn.style.display = "";
                 actionBtn.value = "Positionen wählen";
             }
+        });
+
+        // "OK" wird genutzt
+        okBtn.addEventListener("click", async function (e) {
+            e.preventDefault();
+            active.clear();
+            await generate();
         });
 
         // textarea ausblenden, Wort-Leiste an ihrer Stelle zeigen
@@ -168,7 +183,23 @@
 
         // Phase 2: Abschnitte bilden, Kandidaten holen, Ausgabe als DOM bauen
         async function generate() {
+
             const points = [...active].sort((a, b) => a - b);
+
+            // Keine Positionen gewählt oder OK gedrückt: ganzer Text = ein Abschnitt
+            if (points.length === 0) {
+                if (words.length > 0) {
+                    text = words.filter(w => w !== "\n").join(" ");
+                } else {
+                    text = input.value;
+                }
+                const candidates = await fetchCandidates(text);
+                result.textContent = "";
+                result.append(text);
+                result.append(" ");
+                result.append(buildEmoji(candidates, text));
+                return;
+            }
 
             const segmentAt = new Map();
             const tasks = [];
@@ -196,8 +227,9 @@
                 // Leerzeichen nur zwischen zwei Wörtern, nicht vor einem Umbruch
                 if (i < words.length - 1 && words[i + 1] !== "\n") result.append(" ");
             }
+
         }
-        
+
     </script>
 
 </body>

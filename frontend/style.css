@@ -39,6 +39,12 @@ body {
     height: 100%;
 }
 
+.button-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
 textarea {
     flex: 1;
     width: 100%;
@@ -119,16 +125,31 @@ input[type="submit"]:hover {
     padding: 2px 4px;
     border-radius: 4px;
 }
+
 .emoji-alt:hover {
     background: #f0f0f0;
 }
 
 @keyframes shaking {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(5deg); }
-  50% { transform: rotate(0deg); }
-  75% { transform: rotate(-5deg); }
-  100% { transform: rotate(0deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(5deg);
+    }
+
+    50% {
+        transform: rotate(0deg);
+    }
+
+    75% {
+        transform: rotate(-5deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
 }
 
 .token-strip {
