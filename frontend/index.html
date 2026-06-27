@@ -212,6 +212,20 @@
                 menu.append(alt);
             });
 
+            wrapper.addEventListener("mouseenter", () => {
+                const rect = emojiSpan.getBoundingClientRect();
+                menu.style.position = "fixed";
+                menu.style.left = rect.left + rect.width / 2 + "px";
+                menu.style.top = rect.bottom + "px";
+                menu.style.transform = "translateX(-50%)";
+            });
+            wrapper.addEventListener("mouseleave", () => {
+                menu.style.position = "";
+                menu.style.left = "";
+                menu.style.top = "";
+                menu.style.transform = "";
+            });
+
             wrapper.append(emojiSpan, menu);
             return wrapper;
         }
@@ -223,11 +237,9 @@
 
             // Keine Positionen gewählt oder OK gedrückt: ganzer Text = ein Abschnitt
             if (points.length === 0) {
-                if (words.length > 0) {
-                    text = words.filter(w => w !== "\n").join(" ");
-                } else {
-                    text = input.value;
-                }
+                const text = words.length > 0
+                    ? words.filter(w => w !== "\n").join(" ")
+                    : input.value;
                 const candidates = await fetchCandidates(text);
                 result.className = "";
                 result.textContent = "";

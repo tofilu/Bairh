@@ -27,6 +27,7 @@ body {
 .right-container {
     width: 42%;
     height: 250px;
+    overflow-y: auto;
     background-color: white;
     padding: 20px;
     border-radius: 12px;
@@ -109,7 +110,8 @@ input[type="button"]:hover {
     display: none;
     position: absolute;
     top: 100%;
-    left: -200%;
+    left: 50%;
+    transform: translateX(-50%);
     gap: 4px;
     padding: 4px;
     background: rgba(0, 0, 0, 0.2);
