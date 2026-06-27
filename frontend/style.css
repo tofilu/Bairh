@@ -78,6 +78,10 @@ input[type="submit"]:hover {
     background-color: #4338ca;
 }
 
+.loading {
+    color: #888;
+}
+
 .output-box {
     font-size: 16px;
     color: #333;
@@ -223,4 +227,12 @@ input[type="submit"]:hover {
 
 .toggle-label input:checked + .toggle-slider::before {
   transform: translateX(18px);
+}
+
+.toggle-label.disabled {
+  cursor: not-allowed;
+}
+
+.toggle-label.disabled .toggle-slider {
+  background: #bbb;
 }

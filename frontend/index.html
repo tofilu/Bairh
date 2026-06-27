@@ -63,6 +63,23 @@
         const input = document.getElementById("input");
         const strip = document.getElementById("token-strip");
         const result = document.getElementById("result");
+        const llmCheckbox = document.getElementById("use-llm");
+        const llmLabel = document.querySelector(".toggle-label");
+
+        fetch("/llm/status")
+            .then(r => r.json())
+            .then(status => {
+                if (status.available !== true) {
+                    llmCheckbox.disabled = true;
+                    llmCheckbox.checked = false;
+                    llmLabel.classList.add("disabled");
+                }
+            })
+            .catch(() => {
+                llmCheckbox.disabled = true;
+                llmCheckbox.checked = false;
+                llmLabel.classList.add("disabled");
+            });
 
         // Enter wählt immer "OK" aus
         document.addEventListener("keydown", function (event) {
@@ -88,9 +105,11 @@
                 okBtn.style.display = "none";
                 actionBtn.value = "OK";
             } else {
+                result.className = "loading";
                 result.textContent = "Emojis werden geladen ...";
                 await generate();
                 showTextarea();
+                words = [];
                 mode = "positions";
                 okBtn.style.display = "";
                 actionBtn.value = "Positionen wählen";
@@ -101,6 +120,9 @@
         okBtn.addEventListener("click", async function (e) {
             e.preventDefault();
             active.clear();
+            words = [];
+            result.className = "loading";
+            result.textContent = "Emojis werden geladen ...";
             await generate();
         });
 
@@ -207,6 +229,7 @@
                     text = input.value;
                 }
                 const candidates = await fetchCandidates(text);
+                result.className = "";
                 result.textContent = "";
                 result.append(text);
                 result.append(" ");
@@ -226,6 +249,7 @@
             }
             const candidatesAt = new Map(await Promise.all(tasks));
 
+            result.className = "";
             result.textContent = "";
             for (let i = 0; i < words.length; i++) {
                 if (words[i] === "\n") {

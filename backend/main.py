@@ -16,6 +16,8 @@ from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
 
+LLM_MODEL = os.getenv("LLM_MODEL", "llama3")
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -83,6 +85,15 @@ def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = For
         metadatas=[{"emoji": emoji}],
     )
     return {"status": "ok"}
+
+
+@app.get("/llm/status")
+def llm_status():
+    try:
+        ollama.list()
+        return {"available": True}
+    except Exception:
+        return {"available": False}
 
 
 # Für debug Zwecke
@@ -153,8 +164,9 @@ def init_db():
         embedding_function=embedding_function,  # type: ignore[arg-type]
     )
 
-    csv = load_csv(CSV_PATH)
-    fill_collection(collection, csv)
+    if collection.count() == 0:
+        csv = load_csv(CSV_PATH)
+        fill_collection(collection, csv)
 
     return collection, feedback
 
@@ -204,14 +216,15 @@ def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
         f"Antworte nur mit dem ausgewählten Emoji."
     )
 
-    response = ollama.chat(
-        model="llama3",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    # Emoji wird aus der Antwort "geschnitten"
-    response_emoji = response["message"]["content"].strip()
+    try:
+        response = ollama.chat(
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        response_emoji = response["message"]["content"].strip()
+    except Exception:
+        return candidates[0].emoji
 
-    # Check, damit nicht halluziniert werden kann
     valid_emojis = [c.emoji for c in candidates]
     if response_emoji not in valid_emojis:
         return candidates[0].emoji
