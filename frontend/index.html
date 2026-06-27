@@ -44,6 +44,11 @@
                 Wenn die generierten Emojis nur auf Datenbankergebnissen beruhen sollen, kannst du den Einsatz von
                 KI hier abwählen:
             </p>
+            <label class="toggle-label">
+                <input type="checkbox" id="use-llm" checked>
+                <span class="toggle-slider"></span>
+                LLM Unterstützung
+            </label>
         </div>
     </div>
     <script>
@@ -144,7 +149,7 @@
             const response = await fetch("/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ input: text })
+                body: new URLSearchParams({ input: text, use_llm: document.getElementById("use-llm").checked })
             });
             return await response.json();
         }

@@ -55,6 +55,7 @@ def generate(
     request: Request,
     input: str = Form(...),
     weight: float = Form(DEFAULT_FEEDBACK_WEIGHT),
+    use_llm: bool = Form(True),
 ):
     # Retrieval-Schritt: liefert passende Emojis zum Input
     emoji_candidates = recommend(
@@ -64,9 +65,10 @@ def generate(
         weight,
     )
 
-    # Generation-Schritt: wählt einen der 4 Emojis aus
-    best_emoji = generate_with_llm(input, emoji_candidates)
-    emoji_candidates.sort(key=lambda c: c.emoji != best_emoji)
+    # Generation-Schritt: wählt einen der 4 Emojis aus (optional mit LLM)
+    if use_llm:
+        best_emoji = generate_with_llm(input, emoji_candidates)
+        emoji_candidates.sort(key=lambda c: c.emoji != best_emoji)
 
     return emoji_candidates
 
