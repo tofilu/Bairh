@@ -4,7 +4,7 @@ import uuid  # uuid for unique identifiers
 import chromadb
 import pandas as pd  # for reading the csv
 import logging
-import ollama
+import requests
 
 from chromadb.errors import (
     InternalError,
@@ -204,12 +204,17 @@ def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
         f"Antworte nur mit dem ausgewählten Emoji."
     )
 
-    response = ollama.chat(
-        model="llama3",
-        messages=[{"role": "user", "content": prompt}]
+    response = requests.post(
+        "http://127.0.0.1:8080/v1/chat/completions",
+        json={
+            "model": "llama3",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 10,
+        },
+        timeout=30,
     )
     # Emoji wird aus der Antwort "geschnitten"
-    response_emoji = response["message"]["content"].strip()
+    response_emoji = response.json()["choices"][0]["message"]["content"].strip()
 
     # Check, damit nicht halluziniert werden kann
     valid_emojis = [c.emoji for c in candidates]
