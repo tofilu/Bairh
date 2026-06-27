@@ -45,8 +45,8 @@
     <script>
 
         let mode = "positions";          // aktuelle Phase des Knopfs
-        let words = [];                  // die zerlegten Wörter
-        const active = new Set();        // Indizes der Wörter, NACH denen ein Emoji soll
+        let words = [];                  // die zerlegten Wörter (Tokens)
+        const active = new Set();        // Indizes der Wörter, bei denen ein Emoji folgen soll
 
         const form = document.getElementById("emoji-form");
         const actionBtn = document.getElementById("action-btn");
@@ -73,14 +73,14 @@
             if (mode === "positions") {
                 tokenize();
                 if (words.length === 0) return;        // kein Text -> nichts tun
-                showStrip();                           // textarea -> anklickbare Wort-Leiste
+                showStrip();
                 mode = "ok";
                 okBtn.style.display = "none";
                 actionBtn.value = "OK";
             } else {
                 result.textContent = "Emojis werden geladen ...";
                 await generate();
-                showTextarea();                        // zurück zur textarea
+                showTextarea();
                 mode = "positions";
                 okBtn.style.display = "";
                 actionBtn.value = "Positionen wählen";
@@ -106,10 +106,9 @@
             input.style.display = "";
         }
 
-        // Phase 1: Text in klickbare Wörter + Lücken zerlegen
+        // Text in klickbare Wörter, Zeilenumrbrüche ("\n" als eigenes Token) und Lücken zerlegen 
         function tokenize() {
             active.clear();
-            // in Wörter UND Zeilenumbrüche zerlegen; "\n" bleibt als eigenes Token erhalten
             words = input.value.trim()
                 .split(/(\n)/)
                 .flatMap(part => part === "\n" ? ["\n"] : part.split(/\s+/).filter(Boolean));
@@ -117,8 +116,8 @@
             strip.innerHTML = "";
             words.forEach((word, i) => {
                 if (word === "\n") {
-                    strip.append(document.createElement("br"));   // Umbruch anzeigen
-                    return;                                        // kein "+" nach einem Umbruch
+                    strip.append(document.createElement("br"));   // Umbruch wieder einbauen in die Darstellung
+                    return;                                       // kein "+" nach einem Umbruch
                 }
                 const wordSpan = document.createElement("span");
                 wordSpan.textContent = word;
@@ -135,7 +134,7 @@
             });
         }
 
-        // ruft pro Abschnitt das Backend auf und gibt die ganze Kandidatenliste zurück
+        // ruft pro Abschnitt das Backend auf und gibt die top 4 Emojis zurück
         async function fetchCandidates(text) {
             const response = await fetch("/generate", {
                 method: "POST",
@@ -145,7 +144,7 @@
             return await response.json();
         }
 
-        // schickt die Auswahl als Feedback ans Backend (Kontext = der Abschnitt)
+        // schickt den alternativ gewählten als Feedback ans Backend (Kontext = der Abschnitt vor dem Emoji)
         async function sendFeedback(emoji, segment) {
             await fetch("/feedback", {
                 method: "POST",
@@ -154,7 +153,7 @@
             });
         }
 
-        // baut einen Emoji mit Alternativen-Menü und Tausch-/Feedback-Logik
+        // baut einen Emoji mit Alternativen-Menü beim Hover
         function buildEmoji(candidates, segment) {
             const wrapper = document.createElement("span");
             wrapper.className = "emoji-wrapper";
@@ -185,7 +184,7 @@
             return wrapper;
         }
 
-        // Phase 2: Abschnitte bilden, Kandidaten holen, Ausgabe als DOM bauen
+        // Abschnitte bauen und Emojis and die gewählten Positionen setzen
         async function generate() {
 
             const points = [...active].sort((a, b) => a - b);
@@ -220,7 +219,7 @@
             result.textContent = "";
             for (let i = 0; i < words.length; i++) {
                 if (words[i] === "\n") {
-                    result.append(document.createElement("br"));   // Umbruch in der Ausgabe
+                    result.append(document.createElement("br"));   // Umbruch in der Ausgabe wieder einsetzen
                     continue;
                 }
                 result.append(words[i]);
