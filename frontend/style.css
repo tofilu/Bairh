@@ -31,6 +31,12 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+#result {
+    white-space: pre-wrap;
 }
 
 .left-container form {
@@ -101,23 +107,17 @@ input[type="submit"]:hover {
 
 .emoji-menu {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: -200%;
+    position: fixed;
+    z-index: 9999;
     gap: 4px;
     padding: 4px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    z-index: 10;
 }
 
 .emoji-wrapper:hover .generated-emoji {
     animation: shaking 0.15s infinite;
     filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
-}
-
-.emoji-wrapper:hover .emoji-menu {
-    display: flex;
 }
 
 .emoji-alt {
@@ -223,4 +223,13 @@ input[type="submit"]:hover {
 
 .toggle-label input:checked + .toggle-slider::before {
   transform: translateX(18px);
+}
+
+.toggle-label.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toggle-label.disabled .toggle-slider {
+  background: #ccc;
 }

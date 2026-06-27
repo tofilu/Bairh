@@ -85,6 +85,14 @@ def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = For
     return {"status": "ok"}
 
 
+@app.get("/llm/status")
+def llm_status():
+    try:
+        requests.get("http://127.0.0.1:8080/v1/models", timeout=3)
+        return {"available": True}
+    except requests.RequestException:
+        return {"available": False}
+
 # Für debug Zwecke
 @app.get("/debug/feedback")
 def debug_feedback(request: Request):

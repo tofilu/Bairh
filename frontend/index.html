@@ -63,6 +63,23 @@
         const input = document.getElementById("input");
         const strip = document.getElementById("token-strip");
         const result = document.getElementById("result");
+        const llmCheckbox = document.getElementById("use-llm");
+        const llmLabel = document.querySelector(".toggle-label");
+
+        fetch("/llm/status")
+            .then(r => r.json())
+            .then(status => {
+                if (status.available !== true) {
+                    llmCheckbox.disabled = true;
+                    llmCheckbox.checked = false;
+                    llmLabel.classList.add("disabled");
+                }
+            })
+            .catch(() => {
+                llmCheckbox.disabled = true;
+                llmCheckbox.checked = false;
+                llmLabel.classList.add("disabled");
+            });
 
         // Enter wählt immer "OK" aus
         document.addEventListener("keydown", function (event) {
@@ -92,6 +109,7 @@
                 await generate();
                 showTextarea();
                 mode = "positions";
+                words = [];
                 okBtn.style.display = "";
                 actionBtn.value = "Positionen wählen";
             }
@@ -101,6 +119,7 @@
         okBtn.addEventListener("click", async function (e) {
             e.preventDefault();
             active.clear();
+            words = [];
             await generate();
         });
 
@@ -188,6 +207,17 @@
                 });
 
                 menu.append(alt);
+            });
+
+            wrapper.addEventListener("mouseenter", () => {
+                const rect = emojiSpan.getBoundingClientRect();
+                menu.style.left = rect.left + "px";
+                menu.style.top = (rect.bottom + 4) + "px";
+                menu.style.display = "flex";
+            });
+
+            wrapper.addEventListener("mouseleave", () => {
+                menu.style.display = "none";
             });
 
             wrapper.append(emojiSpan, menu);
