@@ -35,10 +35,14 @@
         </div>
         <div class="bottom-container">
             <h4>Hinweis:</h4>
-            <p>Gib deinen Satz ein und drücke "Positionen wählen". Dein Text wird dann anklickbar — setze
-                zwischen den Wörtern auf das "+" einen Emoji. Mit "OK" wird der Text rechts ausgegeben.<br><br>
-                Fahre über einen Emoji und wähle eine Alternative, die besser passt. Dadurch lernt der
-                Generator dazu und liefert dir in Zukunft bessere Ergebnisse.
+            <p>Gib deinen Text links ein und drücke "OK", um am Ende des Textes einen Emoji zu erzeugen. <br><br>
+                Mit "Positionen wählen" kannst du frei entscheiden, an welchen Stellen Emojis eingefügt
+                werden. Dein Text wird dann anklickbar — mit "+" kannst du die Positionen hinzufügen, mit
+                "OK" den Text mit Emojis ausgeben lassen.<br><br>
+                Sollte dir ein Emoji nicht gefallen, kannst du ihn rechts auswählen und eine bessere Alternative
+                aussuchen. Dadurch lernt der Generator dazu und liefert dir in Zukunft bessere Ergebnisse. <br><br>
+                Wenn die generierten Emojis nur auf Datenbankergebnissen beruhen sollen, kannst du den Einsatz von
+                KI hier abwählen:
             </p>
         </div>
     </div>
@@ -55,6 +59,7 @@
         const strip = document.getElementById("token-strip");
         const result = document.getElementById("result");
 
+        // Enter wählt immer "OK" aus
         document.addEventListener("keydown", function (event) {
             if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
