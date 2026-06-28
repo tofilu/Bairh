@@ -1,6 +1,6 @@
-import os  # os for pathing
-import pathlib  # pathlib for pathing
-import uuid  # uuid for unique identifiers
+import os  # os für pfade
+import pathlib  # pathlib für pfade
+import uuid  # uuid für eindeutige ids
 import chromadb
 import pandas as pd  # for reading the csv
 import logging
@@ -8,7 +8,7 @@ import ollama
 
 from chromadb.errors import (
     InternalError,
-)  # to catch the specific error that gets thrown
+)  # um den spezifischen fehler abzufangen
 from pydantic import BaseModel
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from fastapi.staticfiles import StaticFiles
@@ -93,6 +93,7 @@ def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = For
     return {"status": "ok"}
 
 
+# für den schalter
 @app.get("/llm/status")
 def llm_status():
     try:
@@ -102,7 +103,7 @@ def llm_status():
         return {"available": False}
 
 
-# Für debug Zwecke
+# für debug zwecke
 @app.get("/debug/feedback")
 def debug_feedback(request: Request):
     fb = request.app.state.feedback
