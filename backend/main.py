@@ -1,6 +1,5 @@
 import os  # os for pathing
 import pathlib  # pathlib for pathing
-from sys import exception
 import uuid  # uuid for unique identifiers
 import chromadb
 import pandas as pd  # for reading the csv
@@ -40,9 +39,16 @@ FRONTEND_PATH = os.path.abspath(FRONTEND_PATH)
 DEFAULT_FEEDBACK_WEIGHT = 0.7  # 1.0 = gleich stark wie Basis; zum Testen hochdrehen
 FEEDBACK_DISTANCE_THRESHOLD = 0.7  # Feedback, das weiter von der Anfrage entfernt ist als dieser Schwellenwert, wird ignoriert
 
-embedding_function = SentenceTransformerEmbeddingFunction(
-    model_name="paraphrase-multilingual-MiniLM-L12-v2"
-)
+os.environ["HF_HUB_OFFLINE"] = "1"
+try:
+    embedding_function = SentenceTransformerEmbeddingFunction(
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
+except Exception:
+    del os.environ["HF_HUB_OFFLINE"]
+    embedding_function = SentenceTransformerEmbeddingFunction(
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
 
 # frontend Ordner mounten
 app.mount("/static", StaticFiles(directory=FRONTEND_PATH), name="static")
