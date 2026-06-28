@@ -7,3 +7,4 @@ ollama
 python-multipart==0.0.32
 transformers==5.12.1
 huggingface_hub==1.21.0
+pytest==8.3.4
