@@ -227,3 +227,17 @@ input[type="submit"]:hover {
 .toggle-label input:checked + .toggle-slider::before {
   transform: translateX(18px);
 }
+
+.toggle-label input:disabled + .toggle-slider {
+  background: #ddd;
+  cursor: not-allowed;
+}
+
+.toggle-label input:disabled + .toggle-slider::before {
+  background: #aaa;
+}
+
+.toggle-label input:disabled ~ span:last-child {
+  color: #aaa;
+  cursor: not-allowed;
+}
