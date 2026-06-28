@@ -10,7 +10,6 @@ body {
     margin-bottom: 30px;
 }
 
-
 .page-wrapper {
     max-width: 900px;
     margin: 0 auto;
@@ -27,6 +26,7 @@ body {
 .right-container {
     width: 42%;
     height: 250px;
+    overflow-y: auto;
     background-color: white;
     padding: 20px;
     border-radius: 12px;
