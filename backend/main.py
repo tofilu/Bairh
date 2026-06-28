@@ -39,16 +39,19 @@ FRONTEND_PATH = os.path.abspath(FRONTEND_PATH)
 DEFAULT_FEEDBACK_WEIGHT = 0.7  # 1.0 = gleich stark wie Basis; zum Testen hochdrehen
 FEEDBACK_DISTANCE_THRESHOLD = 0.7  # Feedback, das weiter von der Anfrage entfernt ist als dieser Schwellenwert, wird ignoriert
 
-os.environ["HF_HUB_OFFLINE"] = "1"
+EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+
 try:
     embedding_function = SentenceTransformerEmbeddingFunction(
-        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+        model_name=EMBEDDING_MODEL_NAME
     )
 except Exception:
-    del os.environ["HF_HUB_OFFLINE"]
-    embedding_function = SentenceTransformerEmbeddingFunction(
-        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    print(
+        "Das Embedding-Modell konnte nicht geladen werden. "
+        "Bitte stelle sicher, dass beim ersten Start eine "
+        "Internetverbindung besteht, und starte die Anwendung erneut."
     )
+    raise SystemExit(1)
 
 # frontend Ordner mounten
 app.mount("/static", StaticFiles(directory=FRONTEND_PATH), name="static")
@@ -164,12 +167,14 @@ def init_db():
     collection = chroma_client.get_or_create_collection(
         name="emojis",
         embedding_function=embedding_function,  # type: ignore[arg-type]
+        metadata={"hnsw:space": "cosine"},
     )
 
     logging.info("doing some feedback stuff")
     feedback = chroma_client.get_or_create_collection(
         name="feedback",
         embedding_function=embedding_function,  # type: ignore[arg-type]
+        metadata={"hnsw:space": "cosine"},
     )
 
     if collection.count() == 0:
