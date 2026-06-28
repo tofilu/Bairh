@@ -2,7 +2,7 @@ import os  # os für pfade
 import pathlib  # pathlib für pfade
 import uuid  # uuid für eindeutige ids
 import chromadb
-import pandas as pd  # for reading the csv
+import pandas as pd  # für csv
 import logging
 import ollama
 
@@ -41,6 +41,7 @@ FEEDBACK_DISTANCE_THRESHOLD = 0.7  # Feedback, das weiter von der Anfrage entfer
 
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 
+# try falls modell nicht geladen werden kann
 try:
     embedding_function = SentenceTransformerEmbeddingFunction(
         model_name=EMBEDDING_MODEL_NAME
@@ -57,6 +58,7 @@ except Exception:
 app.mount("/static", StaticFiles(directory=FRONTEND_PATH), name="static")
 
 
+# frontend
 @app.get("/")
 def home():
     return FileResponse(os.path.join(FRONTEND_PATH, "index.html"))
@@ -85,6 +87,7 @@ def generate(
     return emoji_candidates
 
 
+# falls feedback aus dem ankommt
 @app.post("/feedback")
 def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = Form(...)):
     print(f"Feedback received for emoji {emoji}: {emoji_feedback}")
@@ -113,6 +116,7 @@ def debug_feedback(request: Request):
     return {"count": fb.count(), "data": fb.get()}
 
 
+# klasse um zu definieren was in einem element drin ist
 class ListEntry(BaseModel):
     emoji: str
     description: str
@@ -149,7 +153,7 @@ def fill_collection(collection, csv):
     emojis = [{"emoji": emoji} for emoji in csv["emoji"].to_list()]
 
     logging.info("filling the chromadb bit by bit with new info")
-    batch_size = 100
+    batch_size = 500
     length = len(csv)
     for i in range(0, length, batch_size):
         end = min(i + batch_size, length)
@@ -161,13 +165,13 @@ def fill_collection(collection, csv):
 
 
 def init_db():
-    logging.info("Initializing DB")
+    logging.info("initializing DB")
     chroma_client = get_chroma_client()
 
     collection = chroma_client.get_or_create_collection(
         name="emojis",
         embedding_function=embedding_function,  # type: ignore[arg-type]
-        metadata={"hnsw:space": "cosine"},
+        metadata={"hnsw:space": "cosine"},  # hier wird auf cosinus distanz gestellt
     )
 
     logging.info("doing some feedback stuff")
@@ -177,6 +181,7 @@ def init_db():
         metadata={"hnsw:space": "cosine"},
     )
 
+    # nicht neu befüllen wenn es schon voll ist
     if collection.count() == 0:
         csv = load_csv(CSV_PATH)
         fill_collection(collection, csv)
