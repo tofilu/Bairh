@@ -1,5 +1,6 @@
 import os  # os for pathing
 import pathlib  # pathlib for pathing
+from sys import exception
 import uuid  # uuid for unique identifiers
 import chromadb
 import pandas as pd  # for reading the csv
@@ -15,6 +16,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
+
+LLM_Model = os.getenv("LLM_MODEL", "llama3")
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,7 +76,6 @@ def generate(
     return emoji_candidates
 
 
-
 @app.post("/feedback")
 def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = Form(...)):
     print(f"Feedback received for emoji {emoji}: {emoji_feedback}")
@@ -85,11 +87,21 @@ def feedback(request: Request, emoji: str = Form(...), emoji_feedback: str = For
     return {"status": "ok"}
 
 
+@app.get("/llm/status")
+def llm_status():
+    try:
+        ollama.list()
+        return {"available": True}
+    except Exception:
+        return {"available": False}
+
+
 # Für debug Zwecke
 @app.get("/debug/feedback")
 def debug_feedback(request: Request):
     fb = request.app.state.feedback
     return {"count": fb.count(), "data": fb.get()}
+
 
 class ListEntry(BaseModel):
     emoji: str
@@ -153,10 +165,12 @@ def init_db():
         embedding_function=embedding_function,  # type: ignore[arg-type]
     )
 
-    csv = load_csv(CSV_PATH)
-    fill_collection(collection, csv)
+    if collection.count() == 0:
+        csv = load_csv(CSV_PATH)
+        fill_collection(collection, csv)
 
     return collection, feedback
+
 
 # Retrieval-Schritt: liefert passende Emojis zum Input
 def recommend(collection, feedback, text, weight, n_results=4):
@@ -194,6 +208,7 @@ def recommend(collection, feedback, text, weight, n_results=4):
     candidates.sort(key=lambda c: c.score, reverse=True)
     return candidates[:n_results]
 
+
 # Generation-Schritt: wählt einen der 4 Emojis aus
 def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
     emoji_context = ", ".join(f"{c.emoji}" for c in candidates)
@@ -203,17 +218,18 @@ def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
         f"Das Emoji soll zu folgendem Satz passen: '{user_input}'\n"
         f"Antworte nur mit dem ausgewählten Emoji."
     )
-
-    response = ollama.chat(
-        model="llama3",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    # Emoji wird aus der Antwort "geschnitten"
-    response_emoji = response["message"]["content"].strip()
+    try:
+        response = ollama.chat(
+            model="LLM_MODEL", messages=[{"role": "user", "content": prompt}]
+        )
+        # Emoji wird aus der Antwort "geschnitten"
+        response_emoji = response["message"]["content"].strip()
+    except Exception:
+        return candidates[0].emoji
 
     # Check, damit nicht halluziniert werden kann
     valid_emojis = [c.emoji for c in candidates]
     if response_emoji not in valid_emojis:
         return candidates[0].emoji
-    
+
     return response_emoji
