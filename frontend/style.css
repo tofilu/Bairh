@@ -54,7 +54,6 @@ textarea {
     box-sizing: border-box;
     resize: none;
     overflow-y: auto;
-
 }
 
 textarea:focus {
@@ -82,7 +81,10 @@ input[type="submit"]:hover {
     font-size: 16px;
     color: #333;
     white-space: pre-wrap;
+}
 
+#result {
+    overflow-wrap: anywhere;
 }
 
 .bottom-container {
@@ -103,10 +105,11 @@ input[type="submit"]:hover {
     display: none;
     position: absolute;
     top: 100%;
-    left: -200%;
+    left: 50%;
+    transform: translateX(-50%);
     gap: 4px;
     padding: 4px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
     z-index: 10;
 }
