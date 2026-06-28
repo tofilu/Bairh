@@ -18,4 +18,4 @@
 
 8. Seite öffnen auf http://127.0.0.1:8000/
 
-9. *Unter http://127.0.0.1:8000/debug/feedback kann man sich sein Feedback angucken (Also die Datenbank)*
+9. *(Optional) Unter http://127.0.0.1:8000/debug/feedback kann man sich sein Feedback angucken (Also die Datenbank)*
