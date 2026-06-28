@@ -220,7 +220,7 @@ def generate_with_llm(user_input: str, candidates: list[ListEntry]) -> str:
     )
     try:
         response = ollama.chat(
-            model="LLM_MODEL", messages=[{"role": "user", "content": prompt}]
+            model=LLM_Model, messages=[{"role": "user", "content": prompt}]
         )
         # Emoji wird aus der Antwort "geschnitten"
         response_emoji = response["message"]["content"].strip()
