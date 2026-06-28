@@ -7,7 +7,7 @@
 >Alternativ mit `LLM_MODEL` ein anderes ollama-modell nehmen (z.B. `LLM_MODEL=llama3.1:8b`)
 
 3. Ollama muss im Hintergund immer aktiv sein - standardmäßig ist ein Autostart hinterlegt. Ggf. manuell starten mit: 
-```ollama serve``
+```ollama serve```
 
 4. Heruntergeladenes Projekt starten und Backend-Ordner öffnen:
 ```cd .\Bairh\backend```
