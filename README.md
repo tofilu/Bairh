@@ -9,7 +9,7 @@
 4. Backend-Ordner öffnen
 ```cd backend```
 
-5. *(Optioanal)* Virutelle Umgebuch einrichten/aktivieren
+5. *(Optional)* Virutelle Umgebuch einrichten/aktivieren
 6. Requirements installieren
 ```pip install -r requirements.txt```
 
@@ -17,4 +17,5 @@
 ```uvicorn main:app --reload```
 
 8. Seite öffnen auf http://127.0.0.1:8000/
+
 *9. Unter http://127.0.0.1:8000/debug/feedback kann man sich sein Feedback angucken (Also die Datenbank)*
